@@ -349,53 +349,6 @@ function TherapyModules() {
           ))}
         </div>
 
-        {/* Recommended Path */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className={`p-4 rounded-xl shadow-lg ${
-            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-          }`}
-        >
-          <h3 className={`text-lg font-semibold mb-3 ${
-            theme === 'dark' ? 'text-white' : 'text-gray-800'
-          }`}>
-            Recommended Learning Path
-          </h3>
-          <p className={`mb-4 text-sm ${
-            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Based on your progress and goals, we recommend starting with these modules:
-          </p>
-          
-          <div className="grid md:grid-cols-3 gap-3">
-            {therapyModules.slice(2, 5).map((module, index) => (
-              <div
-                key={module.id}
-                className={`p-3 rounded-lg border-2 border-dashed ${
-                  theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
-                }`}
-              >
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className={`w-6 h-6 rounded-lg bg-gradient-to-r ${module.color} flex items-center justify-center`}>
-                    <module.icon className="w-3 h-3 text-white" />
-                  </div>
-                  <span className={`text-sm font-medium ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    {module.title}
-                  </span>
-                </div>
-                <p className={`text-xs ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Step {index + 1} in your journey
-                </p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </div>
   );
