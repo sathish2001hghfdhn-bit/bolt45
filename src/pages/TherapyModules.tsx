@@ -68,25 +68,37 @@ function TherapyModules() {
 
   const updateTherapyProgress = (moduleId: string) => {
     const currentDate = new Date().toISOString().split('T')[0];
-    
+
+    // Check if already completed today
+    const todaysCompletions = userProgress?.dailyCompletions?.[currentDate] || [];
+    if (todaysCompletions.includes(moduleId)) {
+      // Already completed, don't add again
+      return;
+    }
+
     // Update streak
     updateStreak();
-    
+
     if (userProgress?.currentPlan) {
+      const existingCompletedTherapies = userProgress.completedTherapies || [];
+      const updatedCompletedTherapies = existingCompletedTherapies.includes(moduleId)
+        ? existingCompletedTherapies
+        : [...existingCompletedTherapies, moduleId];
+
       const updatedProgress = {
         ...userProgress,
-        completedTherapies: [...(userProgress.completedTherapies || []), moduleId],
+        completedTherapies: updatedCompletedTherapies,
         dailyCompletions: {
           ...userProgress.dailyCompletions,
-          [currentDate]: [...(userProgress.dailyCompletions?.[currentDate] || []), moduleId]
+          [currentDate]: [...todaysCompletions, moduleId]
         }
       };
       setUserProgress(updatedProgress);
       localStorage.setItem('mindcare_user_progress', JSON.stringify(updatedProgress));
-      
+
       // Dispatch custom event for real-time updates
       window.dispatchEvent(new CustomEvent('mindcare-data-updated'));
-      
+
       // Update local state
       setCompletedModules(prev => [...prev, moduleId]);
     } else {
@@ -97,15 +109,15 @@ function TherapyModules() {
         lastResetDate: currentDate,
         dailyCompletions: {
           ...currentProgress.dailyCompletions,
-          [currentDate]: [...(currentProgress.dailyCompletions?.[currentDate] || []), moduleId]
+          [currentDate]: [...todaysCompletions, moduleId]
         }
       };
       setUserProgress(updatedProgress);
       localStorage.setItem('mindcare_user_progress', JSON.stringify(updatedProgress));
-      
+
       // Dispatch custom event for real-time updates
       window.dispatchEvent(new CustomEvent('mindcare-data-updated'));
-      
+
       // Update local state
       setCompletedModules(prev => [...prev, moduleId]);
     }
@@ -223,7 +235,7 @@ function TherapyModules() {
             <div className="w-px h-6 bg-gray-300"></div>
             <div className="text-center">
               <p className={`text-xl font-bold text-blue-500`}>
-                {therapyModules.length - completedModules.length}
+                {Math.max(0, therapyModules.length - completedModules.length)}
               </p>
               <p className={`text-sm ${
                 theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
@@ -234,7 +246,7 @@ function TherapyModules() {
             <div className="w-px h-6 bg-gray-300"></div>
             <div className="text-center">
               <p className={`text-xl font-bold text-teal-500`}>
-                {Math.round((completedModules.length / therapyModules.length) * 100)}%
+                {therapyModules.length > 0 ? Math.min(100, Math.round((completedModules.length / therapyModules.length) * 100)) : 0}%
               </p>
               <p className={`text-sm ${
                 theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
