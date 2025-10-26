@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Heart, Moon, Brain, Target, Smile, Meh, Frown, Award, 
+import toast from 'react-hot-toast';
+import {
+  Heart, Moon, Brain, Target, Smile, Meh, Frown, Award,
   Filter, Download, CheckCircle, PieChart as PieChartIcon,
   TrendingUp, Calendar, Clock, Star, Users, Activity
 } from 'lucide-react';
-import { 
-  LineChart, Line, AreaChart, Area, BarChart, Bar, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, PieChart, Pie, Cell 
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -260,41 +261,23 @@ function ProgressPage() {
   };
 
   const updateAchievements = () => {
+    if (!user?.id) return;
+
     const streakData = getStreakData();
-    const moodEntries = JSON.parse(localStorage.getItem('mindcare_mood_entries') || '[]');
-    const userMoodEntries = moodEntries.filter((e: any) => e.userId === user?.id || !e.userId);
-    
-    // Load all therapy activities
-    const cbtRecords = JSON.parse(localStorage.getItem('mindcare_cbt_records') || '[]');
-    const gratitudeEntries = JSON.parse(localStorage.getItem('mindcare_gratitude_entries') || '[]');
-    const exposureSessions = JSON.parse(localStorage.getItem('mindcare_exposure_sessions') || '[]');
-    const videoProgress = JSON.parse(localStorage.getItem('mindcare_video_progress') || '[]');
+    const patientProgress = getPatientProgress(user.id);
 
-    const userCBT = cbtRecords.filter((r: any) => r.userId === user?.id || !r.userId);
-    const userGratitude = gratitudeEntries.filter((e: any) => e.userId === user?.id || !e.userId);
-    const userExposure = exposureSessions.filter((s: any) => s.userId === user?.id || !s.userId);
-    const userVideo = videoProgress.filter((p: any) => p.userId === user?.id || !p.userId);
+    // Get mindfulness module completion
+    const mindfulnessModule = patientProgress.modules.find(m => m.id === 'mindfulness');
+    const mindfulnessSessions = mindfulnessModule?.completedSessions || 0;
 
-    // Calculate mindfulness sessions (estimate from various activities)
-    const mindfulnessSessions = Math.floor(userMoodEntries.length * 0.3) + 
-                               Math.floor(userGratitude.length * 0.5) + 
-                               userExposure.length;
+    // Get stress management module completion
+    const stressModule = patientProgress.modules.find(m => m.id === 'stress');
+    const stressSessions = stressModule?.completedSessions || 0;
 
-    // Calculate stress management achievements
-    const stressLogs = JSON.parse(localStorage.getItem('mindcare_stress_logs') || '[]');
-    const userStressLogs = stressLogs.filter((l: any) => l.userId === user?.id || !l.userId);
-    const goodStressDays = userStressLogs.filter((log: any) => 
-      log.effectiveness >= 7 // High effectiveness in stress management
+    // Calculate completed therapy modules (modules with at least 10 sessions completed)
+    const completedModules = patientProgress.modules.filter(m =>
+      m.completedSessions >= 10
     ).length;
-
-    // Calculate completed therapy modules
-    const completedModules = [
-      userCBT.length >= 3 ? 1 : 0,
-      userGratitude.length >= 7 ? 1 : 0,
-      userStressLogs.length >= 3 ? 1 : 0,
-      mindfulnessSessions >= 5 ? 1 : 0,
-      userVideo.length >= 2 ? 1 : 0
-    ].reduce((sum, val) => sum + val, 0);
 
     // Update achievements with real progress
     achievements[0].earned = streakData.currentStreak >= 7;
@@ -303,8 +286,8 @@ function ProgressPage() {
     achievements[1].earned = mindfulnessSessions >= 10;
     achievements[1].progress = Math.min(100, (mindfulnessSessions / 10) * 100);
 
-    achievements[2].earned = goodStressDays >= 5;
-    achievements[2].progress = Math.min(100, (goodStressDays / 5) * 100);
+    achievements[2].earned = stressSessions >= 5;
+    achievements[2].progress = Math.min(100, (stressSessions / 5) * 100);
 
     achievements[3].earned = completedModules >= 3;
     achievements[3].progress = Math.min(100, (completedModules / 3) * 100);
